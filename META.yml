@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               WebService-Amazon-Route53
-version:            0.01
+version:            0.011
 abstract:           Perl interface to Amazon Route 53 API
 author:
     - Michal Wojciechowski <odyniec@cpan.org>
