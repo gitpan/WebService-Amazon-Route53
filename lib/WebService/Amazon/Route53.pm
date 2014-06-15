@@ -3,6 +3,10 @@ package WebService::Amazon::Route53;
 use warnings;
 use strict;
 
+# ABSTRACT: Perl interface to Amazon Route 53 API
+
+our $VERSION = '0.020'; # VERSION
+
 use Carp;
 use Digest::HMAC_SHA1;
 use LWP::UserAgent;
@@ -11,100 +15,11 @@ use Tie::IxHash;
 use URI::Escape;
 use XML::Simple;
 
-=head1 NAME
-
-WebService::Amazon::Route53 - Perl interface to Amazon Route 53 API
-
-=head1 VERSION
-
-Version 0.013
-
-=cut
-
-our $VERSION = '0.013';
-
-=head1 SYNOPSIS
-
-WebService::Amazon::Route53 provides an interface to Amazon Route 53 DNS
-service.
-
-    use WebService::Amazon::Route53;
-
-    my $r53 = WebService::Amazon::Route53->new(id => 'ROUTE53ID',
-                                               key => 'SECRETKEY');
-    
-    # Create a new zone
-    $r53->create_hosted_zone(name => 'example.com.',
-                             caller_reference => 'example.com_migration_01');
-    
-    # Get zone information
-    my $zone = $r53->find_hosted_zone(name => 'example.com.');
-    
-    # Create a new record
-    $r53->change_resource_record_sets(zone_id => $zone->{id},
-                                      action => 'create',
-                                      name => 'www.example.com.',
-                                      type => 'A',
-                                      ttl => 86400,
-                                      value => '12.34.56.78');
-
-    # Modify records
-    $r53->change_resource_record_sets(zone_id => $zone->{id},
-        changes => [
-            {
-                action => 'delete',
-                name => 'www.example.com.',
-                type => 'A',
-                ttl => 86400,
-                value => '12.34.56.78'
-            },
-            {
-                action => 'create',
-                name => 'www.example.com.',
-                type => 'A',
-                ttl => 86400,
-                records => [
-                    '34.56.78.90',
-                    '56.78.90.12'
-                ]
-            }
-        ]);
-
-=cut
 
 my $url_base = 'https://route53.amazonaws.com/';
 my $url_api_version = '2011-05-05/';
 my $api_url = $url_base . $url_api_version;
 
-=head1 METHODS
-
-Required parameters are marked as such, other parameters are optional.
-
-Instance methods return C<undef> on failure. More detailed error information can
-be obtained by calling L<"error">.
-
-=head2 new
-
-Creates a new instance of WebService::Amazon::Route53.
-
-    my $r53 = WebService::Amazon::Route53->new(id => 'ROUTE53ID',
-                                               key => 'SECRETKEY');
-
-Parameters:
-
-=over 4
-
-=item * id
-
-B<(Required)> AWS access key ID.
-
-=item * key
-
-B<(Required)> Secret access key.
-
-=back
-
-=cut
 
 sub new {
     my ($class, %args) = @_;
@@ -188,61 +103,6 @@ sub _parse_error {
     };
 }
 
-=head2 list_hosted_zones
-
-Gets a list of hosted zones.
-
-Called in scalar context:
-
-    $zones = $r53->list_hosted_zones(max_items => 15);
-
-Called in list context:
-
-    ($zones, $next_marker) = $r53->list_hosted_zones(marker => '456ZONEID',
-                                                     max_items => 15);
-    
-Parameters:
-
-=over 4
-
-=item * marker
-
-Indicates where to begin the result set. This is the ID of the last hosted zone
-which will not be included in the results.
-
-=item * max_items
-
-The maximum number of hosted zones to retrieve.
-
-=back
-
-Returns: A reference to an array of hash references, containing zone data.
-Example:
-
-    $zones = [
-        {
-            'id' => '/hostedzone/123ZONEID',
-            'name' => 'example.com.',
-            'caller_reference' => 'ExampleZone',
-            'config' => {
-                'comment' => 'This is my first hosted zone'
-            }
-        },
-        {
-            'id' => '/hostedzone/456ZONEID',
-            'name' => 'example2.com.',
-            'caller_reference' => 'ExampleZone2',
-            'config' => {
-                'comment' => 'This is my second hosted zone'
-            }
-        }
-    ];
-    
-When called in list context, it also returns the next marker to pass to a
-subsequent call to C<list_hosted_zones> to get the next set of results. If this
-is the last set of results, next marker will be C<undef>.
-
-=cut
 
 sub list_hosted_zones {
     my ($self, %args) = @_;
@@ -297,34 +157,6 @@ sub list_hosted_zones {
     return wantarray ? ($zones, $next_marker) : $zones;
 }
 
-=head2 get_hosted_zone
-
-Gets hosted zone data.
-
-    $zone = get_hosted_zone(zone_id => '123ZONEID');
-    
-Parameters:
-
-=over 4
-
-=item * zone_id
-
-B<(Required)> Hosted zone ID.
-
-=back
-
-Returns: A reference to a hash containing zone data. Example:
-
-    $zone = {
-        'id' => '/hostedzone/123ZONEID'
-        'name' => 'example.com.',
-        'caller_reference' => 'ExampleZone',
-        'config' => {
-            'comment' => 'This is my first hosted zone'
-        }
-    };
-
-=cut
 
 sub get_hosted_zone {
     my ($self, %args) = @_;
@@ -368,26 +200,6 @@ sub get_hosted_zone {
     return $zone;
 }
 
-=head2 find_hosted_zone
-
-Finds the first hosted zone with the given name.
-
-    $zone = $r53->find_hosted_zone(name => 'example.com.');
-    
-Parameters:
-
-=over 4
-
-=item * name
-
-B<(Required)> Hosted zone name.
-
-=back
-
-Returns: A reference to a hash containing zone data (see L<"get_hosted_zone">),
-or C<0> if there is no hosted zone with the given name.
-
-=cut
 
 sub find_hosted_zone {
     my ($self, %args) = @_;
@@ -434,53 +246,6 @@ sub find_hosted_zone {
     return $found_zone;
 }
 
-=head2 create_hosted_zone
-
-Creates a new hosted zone.
-
-    $response = $r53->create_hosted_zone(name => 'example.com.',
-                                         caller_reference => 'example.com_01');
-
-Parameters:
-
-=over 4
-
-=item * name
-
-B<(Required)> New hosted zone name.
-
-=item * caller_reference
-
-B<(Required)> A unique string that identifies the request.
-
-=back
-
-Returns: A reference to a hash containing new zone data, change description,
-and name servers information. Example:
-
-    $response = {
-        'zone' => {
-            'id' => '/hostedzone/123ZONEID'
-            'name' => 'example.com.',
-            'caller_reference' => 'example.com_01',
-            'config' => {}
-        },
-        'change_info' => {
-            'id' => '/change/123CHANGEID'
-            'submitted_at' => '2011-08-30T23:54:53.221Z',
-            'status' => 'PENDING'
-        },
-        'delegation_set' => {
-            'name_servers' => [
-                'ns-001.awsdns-01.net',
-                'ns-002.awsdns-02.net',
-                'ns-003.awsdns-03.net',
-                'ns-004.awsdns-04.net'
-            ]
-        },
-    };
-
-=cut
 
 sub create_hosted_zone {
     my ($self, %args) = @_;
@@ -551,31 +316,6 @@ sub create_hosted_zone {
     return $ret;
 }
 
-=head2 delete_hosted_zone
-
-Deletes a hosted zone.
-
-    $change_info = $r53->delete_hosted_zone(zone_id => '123ZONEID');
-    
-Parameters:
-
-=over 4
-
-=item * zone_id
-
-B<(Required)> Hosted zone ID.
-
-=back
-
-Returns: A reference to a hash containing change information. Example:
-
-    $change_info = {
-        'id' => '/change/123CHANGEID'
-        'submitted_at' => '2011-08-31T00:04:37.456Z',
-        'status' => 'PENDING'
-    };
-
-=cut
 
 sub delete_hosted_zone {
     my ($self, %args) = @_;
@@ -608,85 +348,6 @@ sub delete_hosted_zone {
     return $change_info;
 }
 
-=head2 list_resource_record_sets
-
-Lists resource record sets for a hosted zone.
-
-Called in scalar context:
-
-    $record_sets = $r53->list_resource_record_sets(zone_id => '123ZONEID');
-    
-Called in list context:
-
-    ($record_sets, $next_record) =
-        $r53->list_resource_record_sets(zone_id => '123ZONEID');
-    
-Parameters:
-
-=over 4
-
-=item * zone_id
-
-B<(Required)> Hosted zone ID.
-
-=item * name
-
-The first domain name (in lexicographic order) to retrieve.
-
-=item * type
-
-DNS record type of the next resource record set to retrieve.
-
-=item * identifier
-
-Set identifier for the next source record set to retrieve. This is needed when
-the previous set of results has been truncated for a given DNS name and type.
-
-=item * max_items
-
-The maximum number of records to be retrieved. The default is 100, and it's the
-maximum allowed value.
-
-=back
-
-Returns: A reference to an array of hash references, containing record set data.
-Example:
-
-    $record_sets = [
-        {
-            name => 'example.com.',
-            type => 'MX'
-            ttl => 86400,
-            records => [
-                '10 mail.example.com'
-            ]
-        },
-        {
-            name => 'example.com.',
-            type => 'NS',
-            ttl => 172800,
-            records => [
-                'ns-001.awsdns-01.net.',
-                'ns-002.awsdns-02.net.',
-                'ns-003.awsdns-03.net.',
-                'ns-004.awsdns-04.net.'
-            ]
-        }
-    ];
-
-When called in list context, it also returns a reference to a hash, containing
-information on the next record which can be passed to a subsequent call to
-C<list_resource_record_sets> to get the next set of records (using the C<name>
-and C<type> parameters). Example:
-
-    $next_record = {
-        name => 'www.example.com.',
-        type => 'A'
-    };
-    
-If this is the last set of records, next record will be C<undef>.
-
-=cut
 
 sub list_resource_record_sets {
     my ($self, %args) = @_;
@@ -772,109 +433,6 @@ sub list_resource_record_sets {
     return wantarray ? ($record_sets, $next_record) : $record_sets;
 }
 
-=head2 change_resource_record_sets
-
-Makes changes to DNS record sets.
-
-    $change_info = $r53->change_resource_record_sets(zone_id => '123ZONEID',
-            changes => [
-                # Delete the current A record
-                {
-                    action => 'delete',
-                    name => 'www.example.com.',
-                    type => 'A',
-                    ttl => 86400,
-                    value => '12.34.56.78'
-                },
-                # Create a new A record with a different value
-                {
-                    action => 'create',
-                    name => 'www.example.com.',
-                    type => 'A',
-                    ttl => 86400,
-                    value => '34.56.78.90'
-                },
-                # Create two new MX records
-                {
-                    action => 'create',
-                    name => 'example.com.',
-                    type => 'MX',
-                    ttl => 86400,
-                    records => [
-                        '10 mail.example.com',
-                        '20 mail2.example.com'
-                    ]
-                }
-            ]);
-        
-If there is just one change to be made, you can use the simplified call syntax,
-and pass the change parameters directly, instead of using the C<changes>
-parameter: 
-
-    $change_info = $r53->change_resource_record_sets(zone_id => '123ZONEID',
-                                                     action => 'delete',
-                                                     name => 'www.example.com.',
-                                                     type => 'A',
-                                                     ttl => 86400,
-                                                     value => '12.34.56.78');
-
-Parameters:
-
-=over 4
-
-=item * zone_id
-
-B<(Required)> Hosted zone ID.
-
-=item * changes
-
-B<(Required)> A reference to an array of hashes, describing the changes to be
-made. If there is just one change, the array may be omitted and change
-parameters may be passed directly.
-
-=back
-
-Change parameters:
-
-=over 4
-
-=item * action
-
-B<(Required)> The action to perform (C<"create"> or C<"delete">).
-
-=item * name
-
-B<(Required)> The name of the domain to perform the action on.
-
-=item * type
-
-B<(Required)> The DNS record type.
-
-=item * ttl
-
-The DNS record time to live (TTL), in seconds.
-
-=item * records
-
-A reference to an array of strings that represent the current or new record
-values. If there is just one value, you can use the C<value> parameter instead.
-
-=item * value
-
-Current or new DNS record value. For multiple record values, use the C<records>
-parameter.
-
-=back
-
-Returns: A reference to a hash containing change information. Example:
-
-    $change_info = {
-        'id' => '/change/123CHANGEID'
-        'submitted_at' => '2011-08-31T00:04:37.456Z',
-        'status' => 'PENDING'
-    };
-
-=cut
 
 sub change_resource_record_sets {
     my ($self, %args) = @_;
@@ -974,12 +532,461 @@ sub change_resource_record_sets {
     return $change_info;
 }
 
+
+sub error {
+    my ($self) = @_;
+    
+    return $self->{error};
+}
+
+
+1; # End of WebService::Amazon::Route53
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+WebService::Amazon::Route53 - Perl interface to Amazon Route 53 API
+
+=head1 VERSION
+
+version 0.020
+
+=head1 SYNOPSIS
+
+WebService::Amazon::Route53 provides an interface to Amazon Route 53 DNS
+service.
+
+    use WebService::Amazon::Route53;
+
+    my $r53 = WebService::Amazon::Route53->new(id => 'ROUTE53ID',
+                                               key => 'SECRETKEY');
+    
+    # Create a new zone
+    $r53->create_hosted_zone(name => 'example.com.',
+                             caller_reference => 'example.com_migration_01');
+    
+    # Get zone information
+    my $zone = $r53->find_hosted_zone(name => 'example.com.');
+    
+    # Create a new record
+    $r53->change_resource_record_sets(zone_id => $zone->{id},
+                                      action => 'create',
+                                      name => 'www.example.com.',
+                                      type => 'A',
+                                      ttl => 86400,
+                                      value => '12.34.56.78');
+
+    # Modify records
+    $r53->change_resource_record_sets(zone_id => $zone->{id},
+        changes => [
+            {
+                action => 'delete',
+                name => 'www.example.com.',
+                type => 'A',
+                ttl => 86400,
+                value => '12.34.56.78'
+            },
+            {
+                action => 'create',
+                name => 'www.example.com.',
+                type => 'A',
+                ttl => 86400,
+                records => [
+                    '34.56.78.90',
+                    '56.78.90.12'
+                ]
+            }
+        ]);
+
+=head1 METHODS
+
+Required parameters are marked as such, other parameters are optional.
+
+Instance methods return C<undef> on failure. More detailed error information can
+be obtained by calling L<"error">.
+
+=head2 new
+
+Creates a new instance of WebService::Amazon::Route53.
+
+    my $r53 = WebService::Amazon::Route53->new(id => 'ROUTE53ID',
+                                               key => 'SECRETKEY');
+
+Parameters:
+
+=over 4
+
+=item * id
+
+B<(Required)> AWS access key ID.
+
+=item * key
+
+B<(Required)> Secret access key.
+
+=back
+
+=head2 list_hosted_zones
+
+Gets a list of hosted zones.
+
+Called in scalar context:
+
+    $zones = $r53->list_hosted_zones(max_items => 15);
+
+Called in list context:
+
+    ($zones, $next_marker) = $r53->list_hosted_zones(marker => '456ZONEID',
+                                                     max_items => 15);
+
+Parameters:
+
+=over 4
+
+=item * marker
+
+Indicates where to begin the result set. This is the ID of the last hosted zone
+which will not be included in the results.
+
+=item * max_items
+
+The maximum number of hosted zones to retrieve.
+
+=back
+
+Returns: A reference to an array of hash references, containing zone data.
+Example:
+
+    $zones = [
+        {
+            'id' => '/hostedzone/123ZONEID',
+            'name' => 'example.com.',
+            'caller_reference' => 'ExampleZone',
+            'config' => {
+                'comment' => 'This is my first hosted zone'
+            }
+        },
+        {
+            'id' => '/hostedzone/456ZONEID',
+            'name' => 'example2.com.',
+            'caller_reference' => 'ExampleZone2',
+            'config' => {
+                'comment' => 'This is my second hosted zone'
+            }
+        }
+    ];
+
+When called in list context, it also returns the next marker to pass to a
+subsequent call to C<list_hosted_zones> to get the next set of results. If this
+is the last set of results, next marker will be C<undef>.
+
+=head2 get_hosted_zone
+
+Gets hosted zone data.
+
+    $zone = get_hosted_zone(zone_id => '123ZONEID');
+
+Parameters:
+
+=over 4
+
+=item * zone_id
+
+B<(Required)> Hosted zone ID.
+
+=back
+
+Returns: A reference to a hash containing zone data. Example:
+
+    $zone = {
+        'id' => '/hostedzone/123ZONEID'
+        'name' => 'example.com.',
+        'caller_reference' => 'ExampleZone',
+        'config' => {
+            'comment' => 'This is my first hosted zone'
+        }
+    };
+
+=head2 find_hosted_zone
+
+Finds the first hosted zone with the given name.
+
+    $zone = $r53->find_hosted_zone(name => 'example.com.');
+
+Parameters:
+
+=over 4
+
+=item * name
+
+B<(Required)> Hosted zone name.
+
+=back
+
+Returns: A reference to a hash containing zone data (see L<"get_hosted_zone">),
+or C<0> if there is no hosted zone with the given name.
+
+=head2 create_hosted_zone
+
+Creates a new hosted zone.
+
+    $response = $r53->create_hosted_zone(name => 'example.com.',
+                                         caller_reference => 'example.com_01');
+
+Parameters:
+
+=over 4
+
+=item * name
+
+B<(Required)> New hosted zone name.
+
+=item * caller_reference
+
+B<(Required)> A unique string that identifies the request.
+
+=back
+
+Returns: A reference to a hash containing new zone data, change description,
+and name servers information. Example:
+
+    $response = {
+        'zone' => {
+            'id' => '/hostedzone/123ZONEID'
+            'name' => 'example.com.',
+            'caller_reference' => 'example.com_01',
+            'config' => {}
+        },
+        'change_info' => {
+            'id' => '/change/123CHANGEID'
+            'submitted_at' => '2011-08-30T23:54:53.221Z',
+            'status' => 'PENDING'
+        },
+        'delegation_set' => {
+            'name_servers' => [
+                'ns-001.awsdns-01.net',
+                'ns-002.awsdns-02.net',
+                'ns-003.awsdns-03.net',
+                'ns-004.awsdns-04.net'
+            ]
+        },
+    };
+
+=head2 delete_hosted_zone
+
+Deletes a hosted zone.
+
+    $change_info = $r53->delete_hosted_zone(zone_id => '123ZONEID');
+
+Parameters:
+
+=over 4
+
+=item * zone_id
+
+B<(Required)> Hosted zone ID.
+
+=back
+
+Returns: A reference to a hash containing change information. Example:
+
+    $change_info = {
+        'id' => '/change/123CHANGEID'
+        'submitted_at' => '2011-08-31T00:04:37.456Z',
+        'status' => 'PENDING'
+    };
+
+=head2 list_resource_record_sets
+
+Lists resource record sets for a hosted zone.
+
+Called in scalar context:
+
+    $record_sets = $r53->list_resource_record_sets(zone_id => '123ZONEID');
+
+Called in list context:
+
+    ($record_sets, $next_record) =
+        $r53->list_resource_record_sets(zone_id => '123ZONEID');
+
+Parameters:
+
+=over 4
+
+=item * zone_id
+
+B<(Required)> Hosted zone ID.
+
+=item * name
+
+The first domain name (in lexicographic order) to retrieve.
+
+=item * type
+
+DNS record type of the next resource record set to retrieve.
+
+=item * identifier
+
+Set identifier for the next source record set to retrieve. This is needed when
+the previous set of results has been truncated for a given DNS name and type.
+
+=item * max_items
+
+The maximum number of records to be retrieved. The default is 100, and it's the
+maximum allowed value.
+
+=back
+
+Returns: A reference to an array of hash references, containing record set data.
+Example:
+
+    $record_sets = [
+        {
+            name => 'example.com.',
+            type => 'MX'
+            ttl => 86400,
+            records => [
+                '10 mail.example.com'
+            ]
+        },
+        {
+            name => 'example.com.',
+            type => 'NS',
+            ttl => 172800,
+            records => [
+                'ns-001.awsdns-01.net.',
+                'ns-002.awsdns-02.net.',
+                'ns-003.awsdns-03.net.',
+                'ns-004.awsdns-04.net.'
+            ]
+        }
+    ];
+
+When called in list context, it also returns a reference to a hash, containing
+information on the next record which can be passed to a subsequent call to
+C<list_resource_record_sets> to get the next set of records (using the C<name>
+and C<type> parameters). Example:
+
+    $next_record = {
+        name => 'www.example.com.',
+        type => 'A'
+    };
+
+If this is the last set of records, next record will be C<undef>.
+
+=head2 change_resource_record_sets
+
+Makes changes to DNS record sets.
+
+    $change_info = $r53->change_resource_record_sets(zone_id => '123ZONEID',
+            changes => [
+                # Delete the current A record
+                {
+                    action => 'delete',
+                    name => 'www.example.com.',
+                    type => 'A',
+                    ttl => 86400,
+                    value => '12.34.56.78'
+                },
+                # Create a new A record with a different value
+                {
+                    action => 'create',
+                    name => 'www.example.com.',
+                    type => 'A',
+                    ttl => 86400,
+                    value => '34.56.78.90'
+                },
+                # Create two new MX records
+                {
+                    action => 'create',
+                    name => 'example.com.',
+                    type => 'MX',
+                    ttl => 86400,
+                    records => [
+                        '10 mail.example.com',
+                        '20 mail2.example.com'
+                    ]
+                }
+            ]);
+
+If there is just one change to be made, you can use the simplified call syntax,
+and pass the change parameters directly, instead of using the C<changes>
+parameter: 
+
+    $change_info = $r53->change_resource_record_sets(zone_id => '123ZONEID',
+                                                     action => 'delete',
+                                                     name => 'www.example.com.',
+                                                     type => 'A',
+                                                     ttl => 86400,
+                                                     value => '12.34.56.78');
+
+Parameters:
+
+=over 4
+
+=item * zone_id
+
+B<(Required)> Hosted zone ID.
+
+=item * changes
+
+B<(Required)> A reference to an array of hashes, describing the changes to be
+made. If there is just one change, the array may be omitted and change
+parameters may be passed directly.
+
+=back
+
+Change parameters:
+
+=over 4
+
+=item * action
+
+B<(Required)> The action to perform (C<"create"> or C<"delete">).
+
+=item * name
+
+B<(Required)> The name of the domain to perform the action on.
+
+=item * type
+
+B<(Required)> The DNS record type.
+
+=item * ttl
+
+The DNS record time to live (TTL), in seconds.
+
+=item * records
+
+A reference to an array of strings that represent the current or new record
+values. If there is just one value, you can use the C<value> parameter instead.
+
+=item * value
+
+Current or new DNS record value. For multiple record values, use the C<records>
+parameter.
+
+=back
+
+Returns: A reference to a hash containing change information. Example:
+
+    $change_info = {
+        'id' => '/change/123CHANGEID'
+        'submitted_at' => '2011-08-31T00:04:37.456Z',
+        'status' => 'PENDING'
+    };
+
 =head2 error
 
 Returns the last error.
 
     $error = $r53->error;
-    
+
 Returns: A reference to a hash containing the type, code, and message of the
 last error. Example:
 
@@ -989,82 +996,44 @@ last error. Example:
         'code' => 'InvalidDomainName'
     };
 
-=cut
-
-sub error {
-    my ($self) = @_;
-    
-    return $self->{error};
-}
-
-=head1 AUTHOR
-
-Michal Wojciechowski, C<< <odyniec at cpan.org> >>
-
-=head1 BUGS
-
-Please report any bugs or feature requests to C<bug-webservice-amazon-route53 at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=WebService-Amazon-Route53>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc WebService::Amazon::Route53
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=WebService-Amazon-Route53>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/WebService-Amazon-Route53>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/WebService-Amazon-Route53>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/WebService-Amazon-Route53/>
-
-=back
-
-
 =head1 SEE ALSO
 
 =over 4
 
-=item * Amazon Route 53 API Reference
 
-L<http://docs.amazonwebservices.com/Route53/latest/APIReference/>
 
 =back
 
+* L<http://docs.amazonwebservices.com/Route53/latest/APIReference/> - Amazon Route 53 API Reference
 
-=head1 ACKNOWLEDGEMENTS
+=for :stopwords cpan testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto metadata placeholders metacpan
 
+=head1 SUPPORT
 
-=head1 LICENSE AND COPYRIGHT
+=head2 Bugs / Feature Requests
 
-Copyright 2011 Michal Wojciechowski.
+Please report any bugs or feature requests through the issue tracker
+at L<https://github.com/odyniec/p5-WebService-Amazon-Route53/issues>.
+You will be notified automatically of any progress on your issue.
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
+=head2 Source Code
 
-See http://dev.perl.org/licenses/ for more information.
+This is open source software.  The code repository is available for
+public review and contribution under the terms of the license.
 
+L<https://github.com/odyniec/p5-WebService-Amazon-Route53>
+
+  git clone https://github.com/odyniec/p5-WebService-Amazon-Route53.git
+
+=head1 AUTHOR
+
+Michal Wojciechowski <odyniec@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2011 by Michal Wojciechowski.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-1; # End of WebService::Amazon::Route53

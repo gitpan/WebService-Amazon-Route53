@@ -4,10 +4,19 @@ author:
   - 'Michal Wojciechowski <odyniec@cpan.org>'
 build_requires:
   ExtUtils::MakeMaker: 0
+  File::Spec: 0
+  File::Spec::Functions: 0
+  File::Temp: 0
+  IO::Handle: 0
+  IPC::Open3: 0
+  List::Util: 0
+  Test::More: 0
+  perl: 5.006
+  version: 0
 configure_requires:
-  ExtUtils::MakeMaker: 0
-dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.113640'
+  ExtUtils::MakeMaker: 6.17
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 5.019, CPAN::Meta::Converter version 2.133380'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -16,12 +25,28 @@ name: WebService-Amazon-Route53
 no_index:
   directory:
     - t
-    - inc
+    - xt
+    - examples
+    - corpus
+  package:
+    - DB
+provides:
+  WebService::Amazon::Route53:
+    file: lib/WebService/Amazon/Route53.pm
+    version: 0.020
 requires:
+  Carp: 0
   Digest::HMAC_SHA1: 0
   LWP::UserAgent: 0
-  Test::More: 0
+  MIME::Base64: 0
   Tie::IxHash: 0
   URI::Escape: 0
   XML::Simple: 0
-version: 0.013
+  perl: 5.006
+  strict: 0
+  warnings: 0
+resources:
+  bugtracker: https://github.com/odyniec/p5-WebService-Amazon-Route53/issues
+  homepage: https://github.com/odyniec/p5-WebService-Amazon-Route53
+  repository: https://github.com/odyniec/p5-WebService-Amazon-Route53.git
+version: 0.020
