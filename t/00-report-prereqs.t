@@ -61,11 +61,14 @@ my $static_prereqs = do { my $x = {
                       'requires' => {
                                       'Carp' => '0',
                                       'Digest::HMAC_SHA1' => '0',
-                                      'LWP::UserAgent' => '0',
+                                      'Exporter' => '0',
+                                      'HTTP::Tiny' => '0',
                                       'MIME::Base64' => '0',
+                                      'Module::Load' => '0',
                                       'Tie::IxHash' => '0',
                                       'URI::Escape' => '0',
                                       'XML::Simple' => '0',
+                                      'parent' => '0',
                                       'perl' => '5.006',
                                       'strict' => '0',
                                       'warnings' => '0'

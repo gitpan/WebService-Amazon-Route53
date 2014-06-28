@@ -4,12 +4,15 @@ use warnings;
 
 # this test was generated with Dist::Zilla::Plugin::Test::Compile 2.043
 
-use Test::More  tests => 1 + ($ENV{AUTHOR_TESTING} ? 1 : 0);
+use Test::More  tests => 4 + ($ENV{AUTHOR_TESTING} ? 1 : 0);
 
 
 
 my @module_files = (
-    'WebService/Amazon/Route53.pm'
+    'WebService/Amazon/Route53.pm',
+    'WebService/Amazon/Route53/API.pm',
+    'WebService/Amazon/Route53/API/20110505.pm',
+    'WebService/Amazon/Route53/API/20130401.pm'
 );
 
 

@@ -8,6 +8,9 @@ Makefile.PL
 cpanfile
 dist.ini
 lib/WebService/Amazon/Route53.pm
+lib/WebService/Amazon/Route53/API.pm
+lib/WebService/Amazon/Route53/API/20110505.pm
+lib/WebService/Amazon/Route53/API/20130401.pm
 t/00-compile.t
 t/00-report-prereqs.t
 xt/author/critic.t

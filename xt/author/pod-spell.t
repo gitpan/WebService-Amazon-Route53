@@ -11,6 +11,9 @@ add_stopwords(<DATA>);
 all_pod_files_spelling_ok( qw( bin lib  ) );
 __DATA__
 AWS
+balancer
+CloudFront
+failover
 TTL
 ttl
 Michal
@@ -20,3 +23,6 @@ lib
 WebService
 Amazon
 Route53
+API
+20110505
+20130401
