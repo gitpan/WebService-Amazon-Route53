@@ -33,16 +33,16 @@ no_index:
 provides:
   WebService::Amazon::Route53:
     file: lib/WebService/Amazon/Route53.pm
-    version: 0.100
+    version: 0.101
   WebService::Amazon::Route53::API:
     file: lib/WebService/Amazon/Route53/API.pm
-    version: 0.100
+    version: 0.101
   WebService::Amazon::Route53::API::20110505:
     file: lib/WebService/Amazon/Route53/API/20110505.pm
-    version: 0.100
+    version: 0.101
   WebService::Amazon::Route53::API::20130401:
     file: lib/WebService/Amazon/Route53/API/20130401.pm
-    version: 0.100
+    version: 0.101
 requires:
   Carp: 0
   Digest::HMAC_SHA1: 0
@@ -61,4 +61,4 @@ resources:
   bugtracker: https://github.com/odyniec/p5-WebService-Amazon-Route53/issues
   homepage: https://github.com/odyniec/p5-WebService-Amazon-Route53
   repository: https://github.com/odyniec/p5-WebService-Amazon-Route53.git
-version: 0.100
+version: 0.101

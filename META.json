@@ -78,19 +78,19 @@
    "provides" : {
       "WebService::Amazon::Route53" : {
          "file" : "lib/WebService/Amazon/Route53.pm",
-         "version" : "0.100"
+         "version" : "0.101"
       },
       "WebService::Amazon::Route53::API" : {
          "file" : "lib/WebService/Amazon/Route53/API.pm",
-         "version" : "0.100"
+         "version" : "0.101"
       },
       "WebService::Amazon::Route53::API::20110505" : {
          "file" : "lib/WebService/Amazon/Route53/API/20110505.pm",
-         "version" : "0.100"
+         "version" : "0.101"
       },
       "WebService::Amazon::Route53::API::20130401" : {
          "file" : "lib/WebService/Amazon/Route53/API/20130401.pm",
-         "version" : "0.100"
+         "version" : "0.101"
       }
    },
    "release_status" : "stable",
@@ -105,6 +105,6 @@
          "web" : "https://github.com/odyniec/p5-WebService-Amazon-Route53"
       }
    },
-   "version" : "0.100"
+   "version" : "0.101"
 }
 

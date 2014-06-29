@@ -5,7 +5,7 @@ use strict;
 
 # ABSTRACT: Perl interface to Amazon Route 53 API
 
-our $VERSION = '0.100'; # VERSION
+our $VERSION = '0.101'; # VERSION
 
 use Carp;
 use Module::Load;
@@ -50,7 +50,7 @@ WebService::Amazon::Route53 - Perl interface to Amazon Route 53 API
 
 =head1 VERSION
 
-version 0.100
+version 0.101
 
 =head1 SYNOPSIS
 

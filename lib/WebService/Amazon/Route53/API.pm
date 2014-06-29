@@ -130,7 +130,7 @@ WebService::Amazon::Route53::API
 
 =head1 VERSION
 
-version 0.100
+version 0.101
 
 =for Pod::Coverage new error
 

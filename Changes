@@ -1,5 +1,8 @@
 Revision history for WebService-Amazon-Route53
 
+0.101     2014-06-29
+          Fixed documentation.
+
 0.100     2014-06-28
           * Added support for multiple API versions
           * Added support for API version 2013-04-01
